@@ -22,6 +22,16 @@ resource "libvirt_volume" "basevolume" {
 data "template_file" "cloud_init" {
   template = <<EOF
 #cloud-config
+manage_etc_hosts: true
+
+package_update: true
+package_upgrade: true
+package_clean: true
+package_reboot_if_required: true
+packages:
+  - curl
+  - tmux
+  - htop
 
 users:
   - name: ubuntu
@@ -32,6 +42,21 @@ users:
     shell: /bin/bash
     lock_passwd: false
 
+  - name: ansible
+    gecos: Ansible User
+    groups: users,admin,wheel
+    sudo: "ALL=(ALL) NOPASSWD:ALL"
+    shell: /bin/bash
+    lock_passwd: true
+    ssh_authorized_keys:
+      - ${file("~/.ssh/id_rsa.pub")}
+
+final_message: |
+  cloud-init has finished
+  version: $version
+  timestamp: $timestamp
+  datasource: $datasource
+  uptime: $uptime
 EOF
 }
 
